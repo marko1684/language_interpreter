@@ -14,4 +14,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependency>
+        <groupId>cup</groupId>
+        <artifactId>cup</artifactId>
+        <version>0.11a</version>
+    </dependency>
+
 </project>
