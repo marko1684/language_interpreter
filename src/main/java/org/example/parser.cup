@@ -1,0 +1,85 @@
+import java.util.*;
+import java_cup.runtime.*;
+
+parser code {:
+    private List<Map<String, Integer>> scopes = new ArrayList<>();
+
+    private void openScope() {
+        scopes.add(new HashMap<>());
+    }
+
+    private void closeScope() {
+        if (!scopes.isEmpty()) {
+            scopes.remove(scopes.size() - 1);
+        }
+    }
+
+    private void assignVariable(String name, int value) {
+        if (scopes.isEmpty()) {
+            throw new IllegalStateException("No scope available to assign variable.");
+        }
+        scopes.get(scopes.size() - 1).put(name, value);
+    }
+
+    private Integer getVariable(String name) {
+        for (int i = scopes.size() - 1; i >= 0; i--) {
+            Map<String, Integer> scope = scopes.get(i);
+            if (scope.containsKey(name)) {
+                return scope.get(name);
+            }
+        }
+        return null;
+    }
+:};
+
+
+terminal PRINT_T, SCOPE_T, OBRACKET_T, CBRACKET_T, ASSIGN;
+terminal String ID;
+terminal Integer NUMBER;
+
+non terminal program, stmt_list, stmt;
+
+program ::=
+    {: 
+        openScope(); 
+    :}
+    stmt_list
+    {: System.out.println("Parsing completed."); :};
+
+stmt_list ::=
+    stmt
+    | stmt_list stmt
+    ;
+
+stmt ::=
+    ID:id1 ASSIGN NUMBER:num
+    {:
+        assignVariable(id1, num);
+    :}
+    | ID:id1 ASSIGN ID:id2
+    {:
+        Integer value = getVariable(id2);
+        if (value != null) {
+            assignVariable(id1, value);
+        } else {
+            System.err.println("Variable " + id2 + " not defined.");
+        }
+    :}
+    | PRINT_T ID:id1
+    {:
+        Integer value = getVariable(id1);
+        if (value != null) {
+            System.out.println(value);
+        } else {
+            System.out.println("null");
+        }
+    :}
+    | SCOPE_T OBRACKET_T
+    {:
+        openScope();
+    :}
+    | CBRACKET_T
+    {:
+        closeScope();
+    :}
+    ;
